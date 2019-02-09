@@ -1,0 +1,8 @@
+Install modules from the Cloud CMS "Manage Platform" / "Modules" page
+
+ui module settings:
+ID: cna-ui
+TITLE: CNA UI
+Source Type: GitHub
+Source URL: https://github.com/harrymoore/cna
+Path: /modules/ui
