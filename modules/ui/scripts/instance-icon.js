@@ -33,14 +33,8 @@ define(function (require, exports, module) {
                     try {
                         // attempt to replace the icon preview url with a url that refers to the node's image property
                         // console.log("Data Loaded: " + JSON.stringify(data, null, 4));
-                        // targetEl.src = "/preview/" + matches[1] + "?repository=" + matches[2] + "&branch=" + data.rows[0].image.id + "&node=" + matches[4] + "&mimetype=image/jpeg&size=160&name=icon-cna160&attachment=default&fallback=/oneteam/modules/app/images/doclib/document-64.png";
-                        // targetEl.src = "/proxy/repositories/127f0940f8f174c0b9ed/branches/285db7b759a4bfa4084a/nodes/65f7e5094c9fe6b4827d/attachments/default";
-                        targetEl.src = "/proxy/repositories/127f0940f8f174c0b9ed/branches/285db7b759a4bfa4084a/nodes/_NODE_/attachments/default".replace("_NODE_", matches[4]);
-                        // targetEl.src = "/proxy/repositories/_REPO_/branches/_BRANCH_/nodes/_NODE_/attachments/default".replace("_REPO_", matches[2]).replace("_BRANCH_", matches[3]).replace("_NODE_", matches[4]);
-                        // targetEl.src = "/proxy/repositories/_REPO_/branches/_BRANCH_/nodes/_NODE_/attachments/default".replace("_REPO_", matches[2]).replace("_BRANCH_", matches[3]).replace("_NODE_", matches[4]);
+                        targetEl.src = "/proxy/repositories/_REPO_/branches/_BRANCH_/nodes/_NODE_/attachments/default".replace("_REPO_", matches[2]).replace("_BRANCH_", matches[3]).replace("_NODE_", data.rows[0].image.id);
                     } finally {}
-                // }).always(function (data, textStatus, err) {
-                //     console.log("always: " + JSON.stringify(err, null, 4));
                 });
             }
         }, true);
