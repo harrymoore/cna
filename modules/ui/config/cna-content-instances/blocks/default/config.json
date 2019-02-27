@@ -1,0 +1,14 @@
+{
+    "evaluator": "uri-match",
+    "condition": "/projects/{projectId}/content/{qname}",
+    "config": {
+        "regions": {
+            "center": {
+                "type": "cna-content-instances",
+                "config": {
+                    "chrome": false
+                }
+            }
+        }
+    }
+}

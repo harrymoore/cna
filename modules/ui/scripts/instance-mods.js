@@ -24,6 +24,7 @@ define(function (require, exports, module) {
                     // find the content-instances gadget
                     var gadget = Ratchet.Instances[$('div .gadget.content-instances').attr("ratchet")];
                     var branch = gadget.observable("branch").get();
+                    var sortDirection = gadget.observable("sortDirection").get();
 
                     Chain(branch).queryNodes({
                         _doc: {
@@ -45,19 +46,19 @@ define(function (require, exports, module) {
 
                         var patches = [];
                         for (var i = 0; i < nodeIds.length; i++) {
-                            var sequence = (1+i).toString();
+                            var sequence = 1+i;
                             var node = result[nodeIds[i]];
-                            if (node.isActive && node.isActive === "no") {
-                                // skip inactive nodes
-                                continue;
-                            }
+                            // if (node.isActive && node.isActive === "no") {
+                            //     // skip inactive nodes
+                            //     continue;
+                            // }
 
                             if (!Gitana.isEmpty(node.sequence) && node.sequence == sequence) {
                                 // skip nodes whos order has not changed
                                 continue;
                             }
 
-                            if (node.sequence != sequence) {
+                            if (node.sequence !== sequence) {
                                 // this node needs a new sequence. patch it.
                                 patches.push({
                                     node: node,
@@ -77,6 +78,7 @@ define(function (require, exports, module) {
                         }, function(err) {
                             // completed pathes
                             console.log("patches completed");
+                            gadget.trigger("global_refresh");
                         });
                     });
                 }
