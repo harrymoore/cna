@@ -1,190 +1,202 @@
-define(function(require, exports, module) {
+define(function (require, exports, module) {
     var Ratchet = require("ratchet/web");
-    var TemplateHelperFactory = require("template-helper");
+    var async = require("//cdn.jsdelivr.net/npm/async@2.6.2/dist/async.min.js");
     require("//code.jquery.com/ui/1.12.1/jquery-ui.js");
 
-    var ContentInstancesGadget = require("oneteam/modules/app/gadgets/project/content/content-instances.js");
+    // var OneTeam = require("oneteam");
+
+    var ContentInstancesGadget = require("app/gadgets/project/content/content-instances");
 
     return Ratchet.GadgetRegistry.register("cna-content-instances", ContentInstancesGadget.extend({
 
-        // getDefaultSortField: function(model)
-        // {
-        //     return "sequence";
-        // },
+        getDefaultSortField: function (model) {
+            return "sequence";
+        },
 
-        // prepareModel: function(el, model, callback)
-        // {
-        //     var self = this;
+        configureDefault: function () {
+            this.base();
 
-        //     this.base(el, model, function() {
+            // this part is normally not needed (it should be picked up from config)
+            // there is a bug in OneTeam whereby this isn't being retained, so set manually here
+            this.config({
+                "chrome": false,
+                "buttons": [],
+                "columns": [{
+                    "title": "Content",
+                    "key": "titleDescription"
+                }],
+                "icon": true,
+                "checkbox": true,
+                "loader": "gitana",
+                "actions": true,
+                "selectorGroups": {
+                    "multi-documents-action-selector-group": {
+                        "actions": []
+                    },
+                    "sort-selector-group": {
+                        "fields": [{
+                            "key": "title",
+                            "title": "Title",
+                            "field": "title"
+                        }, {
+                            "key": "description",
+                            "title": "Description",
+                            "field": "description"
+                        }, {
+                            "key": "createdOn",
+                            "title": "Created On",
+                            "field": "_system.created_on.ms"
+                        }, {
+                            "key": "createdBy",
+                            "title": "Created By",
+                            "field": "_system.created_by"
+                        }, {
+                            "key": "modifiedOn",
+                            "title": "Modified On",
+                            "field": "_system.modified_on.ms"
+                        }, {
+                            "key": "modifiedBy",
+                            "title": "Modified By",
+                            "field": "_system.modified_by"
+                        }, {
+                            "key": "size",
+                            "title": "Size",
+                            "field": "_system.attachments.default.length"
+                        }]
+                    }
+                }
+            });
+        },
 
-        //         model.options.defaultSortDirection = 1;
+        prepareModel: function (el, model, callback) {
+            var self = this;
 
-        //         callback();
+            this.base(el, model, function () {
 
-        //     });
-        // },
+                model.options.defaultSortDirection = 1;
+
+                callback();
+
+            });
+        },
 
         /**
          * Loads dynamic/configuration driven portions of the list into the model.
          *
          * @param model
          */
-        // applyDynamicConfiguration: function(model)
-        // {
-        //     var self = this;
-            
-        //     this.base(model);
+        applyDynamicConfiguration: function (model) {
+            var self = this;
 
-        //     var sortSelectorGroupFields = model["selectorGroups"]["sort-selector-group"]["fields"];
-        //     sortSelectorGroupFields.unshift({
-        //         "key": "sequence",
-        //         "title": "Sequence",
-        //         "field": "sequence"
-        //     });
-        // },
+            this.base(model);
 
+            var sortSelectorGroupFields = model["selectorGroups"]["sort-selector-group"]["fields"];
+            sortSelectorGroupFields.unshift({
+                "key": "sequence",
+                "title": "Sequence",
+                "field": "sequence"
+            });
+        },
 
-        // beforeSwap: function(el, model, callback)
-        // {
-        //     var self = this;
+        /*
+        beforeSwap: function(el, model, callback)
+        {
+            var self = this;
 
-        //     this.base(el, model, function() {
-        //         callback();
-        //     });
-        // },
+            this.base(el, model, function() {
+                callback();
+            });
+        },
+        */
 
-        // afterSwap: function(el, model, originalContext, callback)
-        // {
-        //     var self = this;
-        //     this.thisModel = model;
-            
-        //     this.base(el, model, originalContext, function() {
+        _applyResort: function (gadget, model, event, ui) {
+            console.log("Items re-sorted");
 
-        //         // drag and drop (jquery ui sortable)
-        //         $(el).find('.dataTable > tbody').sortable({
-        //             update: function (event, ui) {
-        //                 console.log("Items re-sorted");
-    
-        //                 $(event.target.children).each(function (index, item) {
-        //                     console.log(index + " " + (item.id || "") + " " + (item.sequence || ""));
-        //                 });
-    
-        //                 var nodeIds = [];
-        //                 $(event.target.children).map(function () {
-        //                     nodeIds.push(this.id);
-        //                 });
-    
-        //                 // find the content-instances gadget
-        //                 var gadget = Ratchet.Instances[$('div .gadget.content-instances').attr("ratchet")];
-        //                 var branch = gadget.observable("branch").get();
-        //                 var sortDirection = gadget.observable("sortDirection").get();
-    
-        //                 Chain(branch).queryNodes({
-        //                     _doc: {
-        //                         "$in": nodeIds
-        //                     },
-        //                     _fields: {
-        //                         sequence: 1,
-        //                         title: 1,
-        //                         isActive: 1
-        //                     }
-        //                 // }, {
-        //                 //     sort: {
-        //                 //         sequence: 1
-        //                 //     }
-        //                 }).then(function () {
-        //                     var result = this;
-        //                     var nodes = result.asArray();
-        //                     console.log("nodes: " + JSON.stringify(nodes, null, 4));
-    
-        //                     var patches = [];
-        //                     for (var i = 0; i < nodeIds.length; i++) {
-        //                         var sequence = 1+i;
-        //                         var node = result[nodeIds[i]];
-        //                         // if (node.isActive && node.isActive === "no") {
-        //                         //     // skip inactive nodes
-        //                         //     continue;
-        //                         // }
-    
-        //                         if (!Gitana.isEmpty(node.sequence) && node.sequence == sequence) {
-        //                             // skip nodes whos order has not changed
-        //                             continue;
-        //                         }
-    
-        //                         if (node.sequence !== sequence) {
-        //                             // this node needs a new sequence. patch it.
-        //                             patches.push({
-        //                                 node: node,
-        //                                 patch: {
-        //                                     op: Gitana.isEmpty(node.sequence) ? "add" : "replace",
-        //                                     path: "/sequence",
-        //                                     value: sequence
-        //                                 }
-        //                             });
-        //                         }
-        //                     }
-    
-        //                     // run any patches
-        //                     console.log("patches: " + JSON.stringify(patches, null, 4));
-        //                     async.each(patches, function(patch, callback) {
-        //                         Chain(patch.node).patch([patch.patch]).then(callback);        
-        //                     }, function(err) {
-        //                         // completed pathes
-        //                         console.log("patches completed");
-        //                         gadget.trigger("global_refresh");
-        //                     });
-        //                 });
-        //             }
-        //         });
-    
-        //         callback();
-        //     });
-        // }
+            // $(event.target.children).each(function (index, item) {
+            //     console.log(index + " " + (item.id || "") + " " + (item.sequence || ""));
+            // });
 
-        // doGitanaQuery: function(context, model, searchTerm, query, pagination, callback)
-        // {
-        //     var self = this;
+            var newOrder = $(event.target.children).map(function (index, item) {
+                return item.id;
+            });
 
-        //     pagination.paths = true;
+            var direction = 1;
+            if (model.pagination && model.pagination.sort && model.pagination.sort.sequence) {
+                direction = model.pagination.sort.sequence;
+            }
 
-        //     if (pagination.limit == 10) {
-        //         pagination.limit = 25;
-        //     }                                                                                                 
+            var patches = [];
+            var sequence = direction < 0 ? 1 + model.totalRows : 0;
+            for (var i = 0; i < newOrder.length; i++) {
+                sequence += direction;
+                var node = model.rowsById[newOrder[i]];
 
-        //     var project = self.observable("project").get();
+                if (!Gitana.isEmpty(node.sequence) && node.sequence == sequence) {
+                    // skip nodes whos order has not changed
+                    continue;
+                }
 
-        //     if (OneTeam.isEmptyOrNonExistent(query) && searchTerm)
-        //     {
-        //         query = OneTeam.searchQuery(searchTerm, ["title", "description"]);
-        //     }
+                if (node.sequence !== sequence) {
+                    // this node needs a new sequence. patch it.
+                    patches.push({
+                        node: node,
+                        patch: {
+                            op: Gitana.isEmpty(node.sequence) ? "add" : "replace",
+                            path: "/sequence",
+                            value: sequence
+                        }
+                    });
+                }
+            }
 
-        //     if (!query)
-        //     {
-        //         query = {};
-        //     }
+            // run any patches
+            console.log("patches: " + JSON.stringify(patches, null, 4));
+            async.each(patches, function (patch, callback) {
+                Chain(patch.node).patch([patch.patch]).then(callback);
+            }, function (err) {
+                // completed pathes
+                console.log("patches completed");
+                // gadget.trigger("global_refresh");
+                gadget.refresh(model);
+            });
+        },
 
-        //     OneTeam.projectBranch(self, function() {
+        afterSwap: function (el, model, originalContext, callback) {
+            var self = this;
 
-        //         // selected content type
-        //         var selectedContentTypeDescriptor = self.observable("selected-content-type").get();
-        //         if (!selectedContentTypeDescriptor)
-        //         {
-        //             // produce an empty node map
-        //             return callback(new Gitana.NodeMap(this));
-        //         }
+            this.base(el, model, originalContext, function () {
 
-        //         query._type = selectedContentTypeDescriptor.definition.getQName();
+                // apply drag and drop (jquery ui sortable) to table dom element
+                // only apply sortable if list is sorted by the sequence field
+                if (model.pagination && model.pagination.sort && model.pagination.sort.sequence) {
+                    $(el).find('.dataTable > tbody').sortable({
+                        update: async.apply(self._applyResort, self, model)
+                    });
+                }
 
-        //         // if (self.selectedLocale) {
-        //         //     query["_features.f:translation.locale"] = self.selectedLocale;
-        //         // }
+                callback();
+            });
+        },
 
-        //         this.queryNodes(query, pagination).then(function() {
-        //             callback(this);
-        //         });
-        //     });
-        // },
+        doGitanaQuery: function (context, model, searchTerm, query, pagination, callback) {
+            this.base(context, model, searchTerm, query, pagination, function (resultMap) {
+
+                var array = resultMap.asArray();
+
+                model.size = resultMap.size();
+                model.totalRows = resultMap.totalRows();
+
+                // copy into map so that we can reference by ID
+                // this may help with drag/drop                
+                model.rowsById = {};
+                for (var i = 0; i < array.length; i++) {
+                    var row = array[i];
+                    model.rowsById[row._doc] = row;
+                }
+
+                callback(resultMap);
+            });
+        }
 
     }));
 
