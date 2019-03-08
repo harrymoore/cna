@@ -1,9 +1,8 @@
 define(function (require, exports, module) {
     var Ratchet = require("ratchet/web");
     var async = require("//cdn.jsdelivr.net/npm/async@2.6.2/dist/async.min.js");
+    var OneTeam = require("oneteam");
     require("//code.jquery.com/ui/1.12.1/jquery-ui.js");
-
-    // var OneTeam = require("oneteam");
 
     var ContentInstancesGadget = require("app/gadgets/project/content/content-instances");
 
@@ -110,12 +109,6 @@ define(function (require, exports, module) {
         */
 
         _applyResort: function (gadget, model, event, ui) {
-            console.log("Items re-sorted");
-
-            // $(event.target.children).each(function (index, item) {
-            //     console.log(index + " " + (item.id || "") + " " + (item.sequence || ""));
-            // });
-
             var newOrder = $(event.target.children).map(function (index, item) {
                 return item.id;
             });
@@ -150,13 +143,10 @@ define(function (require, exports, module) {
             }
 
             // run any patches
-            console.log("patches: " + JSON.stringify(patches, null, 4));
             async.each(patches, function (patch, callback) {
                 Chain(patch.node).patch([patch.patch]).then(callback);
             }, function (err) {
-                // completed pathes
-                console.log("patches completed");
-                // gadget.trigger("global_refresh");
+                // completed patches
                 gadget.refresh(model);
             });
         },
@@ -196,8 +186,18 @@ define(function (require, exports, module) {
 
                 callback(resultMap);
             });
+        },
+
+        iconUri: function(row, model, context)
+        {
+            var _iconUri = OneTeam.iconUriForNode(row);
+
+            if (row.image && row.image.id) {
+                _iconUri = OneTeam.iconUriForNode(row, {size: 160});
+                _iconUri = _iconUri.replace(new RegExp("node=" + row._doc + "&"), "node=" + row.image.id + "&");
+            }
+
+            return _iconUri;
         }
-
     }));
-
 });
